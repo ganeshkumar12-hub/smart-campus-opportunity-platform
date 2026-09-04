@@ -1,5 +1,5 @@
 package com.smartcampus.backend.security;
-
+import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -32,14 +32,32 @@ public class SecurityConfig {
                         )
                 )
 
-                .authorizeHttpRequests(auth -> auth
+.authorizeHttpRequests(auth -> auth
+        .requestMatchers("/api/auth/**").permitAll()
 
-                        .requestMatchers(
-                                "/api/auth/**"
-                        ).permitAll()
+        .requestMatchers(HttpMethod.POST, "/api/opportunities")
+        .hasAnyRole("EMPLOYEE", "ADMIN")
 
-                        .anyRequest().authenticated()
-                )
+        .requestMatchers(HttpMethod.PUT, "/api/opportunities/**")
+        .hasAnyRole("EMPLOYEE", "ADMIN")
+
+        .requestMatchers(HttpMethod.DELETE, "/api/opportunities/**")
+        .hasAnyRole("EMPLOYEE", "ADMIN")
+
+        .requestMatchers("/api/opportunities/**")
+        .authenticated()
+
+        .requestMatchers("/api/referrals/**")
+        .authenticated()
+
+        .requestMatchers("/api/applications/**")
+        .authenticated()
+
+        .requestMatchers("/api/users/**")
+        .authenticated()
+
+        .anyRequest().authenticated()
+)
 
                 .addFilterBefore(
                         jwtAuthenticationFilter,
