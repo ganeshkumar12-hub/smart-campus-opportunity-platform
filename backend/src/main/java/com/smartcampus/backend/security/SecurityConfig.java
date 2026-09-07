@@ -47,11 +47,29 @@ public class SecurityConfig {
         .requestMatchers("/api/opportunities/**")
         .authenticated()
 
-        .requestMatchers("/api/referrals/**")
-        .authenticated()
+        .requestMatchers(HttpMethod.POST, "/api/referrals")
+.hasRole("STUDENT")
 
-        .requestMatchers("/api/applications/**")
-        .authenticated()
+.requestMatchers(HttpMethod.PUT, "/api/referrals/**")
+.hasAnyRole("EMPLOYEE", "ADMIN")
+
+.requestMatchers(HttpMethod.GET, "/api/referrals/**")
+.authenticated()
+
+.requestMatchers(HttpMethod.DELETE, "/api/referrals/**")
+.hasAnyRole("EMPLOYEE", "ADMIN")
+
+.requestMatchers(HttpMethod.POST, "/api/applications")
+.hasRole("STUDENT")
+
+.requestMatchers(HttpMethod.PUT, "/api/applications/**")
+.hasAnyRole("EMPLOYEE", "ADMIN")
+
+.requestMatchers(HttpMethod.DELETE, "/api/applications/**")
+.hasAnyRole("EMPLOYEE", "ADMIN")
+
+.requestMatchers(HttpMethod.GET, "/api/applications/**")
+.authenticated()
 
         .requestMatchers("/api/users/**")
         .authenticated()
