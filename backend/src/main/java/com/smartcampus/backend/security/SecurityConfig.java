@@ -68,9 +68,14 @@ public class SecurityConfig {
 .requestMatchers(HttpMethod.DELETE, "/api/applications/**")
 .hasAnyRole("EMPLOYEE", "ADMIN")
 
-.requestMatchers(HttpMethod.GET, "/api/applications/**")
+.requestMatchers(HttpMethod.GET, "/api/applications/opportunity/**")
+.hasAnyRole("EMPLOYEE", "ADMIN")
+
+.requestMatchers(HttpMethod.GET, "/api/applications/student/**")
 .authenticated()
 
+.requestMatchers(HttpMethod.GET, "/api/applications/*")
+.authenticated()
         .requestMatchers("/api/users/**")
         .authenticated()
 

@@ -2,6 +2,7 @@ package com.smartcampus.backend.service;
 
 import com.smartcampus.backend.entity.Referral;
 import com.smartcampus.backend.repository.ReferralRepository;
+import com.smartcampus.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,19 +10,36 @@ import java.util.List;
 @Service
 public class ReferralService {
 
-    private final ReferralRepository referralRepository;
+private final ReferralRepository referralRepository;
+private final UserRepository userRepository;
 
-    public ReferralService(ReferralRepository referralRepository) {
-        this.referralRepository = referralRepository;
-    }
+public ReferralService(
+        ReferralRepository referralRepository,
+        UserRepository userRepository) {
+
+    this.referralRepository = referralRepository;
+    this.userRepository = userRepository;
+}
 
     // Create referral request
-    public Referral createReferral(Referral referral) {
+public Referral createReferral(Referral referral) {
 
-        referral.setStatus("PENDING");
+    boolean validReferrer =
+            userRepository.existsByEmailAndRole(
+                    referral.getReferrerEmail(),
+                    "EMPLOYEE"
+            );
 
-        return referralRepository.save(referral);
+    if (!validReferrer) {
+        throw new RuntimeException(
+                "Referrer must be a valid employee"
+        );
     }
+
+    referral.setStatus("PENDING");
+
+    return referralRepository.save(referral);
+}
 
     // Get all referrals
     public List<Referral> getAllReferrals() {

@@ -1,5 +1,5 @@
 package com.smartcampus.backend.controller;
-
+import org.springframework.security.core.Authentication;
 import com.smartcampus.backend.entity.Application;
 import com.smartcampus.backend.service.ApplicationService;
 import org.springframework.web.bind.annotation.*;
@@ -17,13 +17,15 @@ public class ApplicationController {
     }
 
     // Create application
-    @PostMapping
-    public Application createApplication(
-            @RequestBody Application application) {
+@PostMapping
+public Application createApplication(
+        @RequestBody Application application,
+        Authentication authentication) {
 
-        return applicationService.createApplication(application);
-    }
+    application.setStudentEmail(authentication.getName());
 
+    return applicationService.createApplication(application);
+}
     // Get all applications
     @GetMapping
     public List<Application> getAllApplications() {
@@ -40,13 +42,20 @@ public class ApplicationController {
     }
 
     // Get applications by student
-    @GetMapping("/student/{email}")
-    public List<Application> getApplicationsByStudent(
-            @PathVariable String email) {
+@GetMapping("/student/{email}")
+public List<Application> getApplicationsByStudent(
+        @PathVariable String email,
+        Authentication authentication) {
 
-        return applicationService
-                .getApplicationsByStudent(email);
+    if (!email.equals(authentication.getName())) {
+        throw new RuntimeException(
+                "You can only view your own applications"
+        );
     }
+
+    return applicationService
+            .getApplicationsByStudent(email);
+}
 
     // Get applications by opportunity
     @GetMapping("/opportunity/{opportunityId}")
