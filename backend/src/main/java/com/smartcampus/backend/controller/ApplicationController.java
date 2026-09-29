@@ -3,6 +3,7 @@ import org.springframework.security.core.Authentication;
 import com.smartcampus.backend.entity.Application;
 import com.smartcampus.backend.service.ApplicationService;
 import org.springframework.web.bind.annotation.*;
+import com.smartcampus.backend.exception.ResourceAccessException;
 
 import java.util.List;
 
@@ -48,9 +49,9 @@ public List<Application> getApplicationsByStudent(
         Authentication authentication) {
 
     if (!email.equals(authentication.getName())) {
-        throw new RuntimeException(
-                "You can only view your own applications"
-        );
+        throw new ResourceAccessException(
+        "You can only view your own applications"
+);
     }
 
     return applicationService
