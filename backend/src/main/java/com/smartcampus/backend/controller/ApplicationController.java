@@ -1,9 +1,13 @@
 package com.smartcampus.backend.controller;
-import org.springframework.security.core.Authentication;
+
 import com.smartcampus.backend.entity.Application;
 import com.smartcampus.backend.service.ApplicationService;
-import org.springframework.web.bind.annotation.*;
 import com.smartcampus.backend.exception.ResourceAccessException;
+
+import jakarta.validation.Valid;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -17,48 +21,41 @@ public class ApplicationController {
         this.applicationService = applicationService;
     }
 
-    // Create application
-@PostMapping
-public Application createApplication(
-        @RequestBody Application application,
-        Authentication authentication) {
+    @PostMapping
+    public Application createApplication(
+            @Valid @RequestBody Application application,
+            Authentication authentication) {
 
-    application.setStudentEmail(authentication.getName());
+        application.setStudentEmail(authentication.getName());
 
-    return applicationService.createApplication(application);
-}
-    // Get all applications
+        return applicationService.createApplication(application);
+    }
+
     @GetMapping
     public List<Application> getAllApplications() {
-
         return applicationService.getAllApplications();
     }
 
-    // Get application by ID
     @GetMapping("/{id}")
     public Application getApplicationById(
             @PathVariable Long id) {
-
         return applicationService.getApplicationById(id);
     }
 
-    // Get applications by student
-@GetMapping("/student/{email}")
-public List<Application> getApplicationsByStudent(
-        @PathVariable String email,
-        Authentication authentication) {
+    @GetMapping("/student/{email}")
+    public List<Application> getApplicationsByStudent(
+            @PathVariable String email,
+            Authentication authentication) {
 
-    if (!email.equals(authentication.getName())) {
-        throw new ResourceAccessException(
-        "You can only view your own applications"
-);
+        if (!email.equals(authentication.getName())) {
+            throw new ResourceAccessException(
+                    "You can only view your own applications"
+            );
+        }
+
+        return applicationService.getApplicationsByStudent(email);
     }
 
-    return applicationService
-            .getApplicationsByStudent(email);
-}
-
-    // Get applications by opportunity
     @GetMapping("/opportunity/{opportunityId}")
     public List<Application> getApplicationsByOpportunity(
             @PathVariable Long opportunityId) {
@@ -67,7 +64,6 @@ public List<Application> getApplicationsByStudent(
                 .getApplicationsByOpportunity(opportunityId);
     }
 
-    // Update application status
     @PutMapping("/{id}/status")
     public Application updateApplicationStatus(
             @PathVariable Long id,
@@ -77,7 +73,6 @@ public List<Application> getApplicationsByStudent(
                 .updateApplicationStatus(id, status);
     }
 
-    // Delete application
     @DeleteMapping("/{id}")
     public String deleteApplication(
             @PathVariable Long id) {

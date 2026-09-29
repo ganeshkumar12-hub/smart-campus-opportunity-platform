@@ -1,6 +1,8 @@
 package com.smartcampus.backend.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "applications")
@@ -10,15 +12,20 @@ public class Application {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull
     private Long opportunityId;
 
+    @NotBlank
     private String studentEmail;
 
+    @NotBlank
     private String resumeUrl;
 
+    @NotBlank
     private String coverLetter;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private ApplicationStatus status;
 
     public Long getId() {
         return id;
@@ -60,11 +67,11 @@ public class Application {
         this.coverLetter = coverLetter;
     }
 
-    public String getStatus() {
+    public ApplicationStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(ApplicationStatus status) {
         this.status = status;
     }
 }

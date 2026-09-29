@@ -1,6 +1,7 @@
 package com.smartcampus.backend.service;
 
 import com.smartcampus.backend.entity.Application;
+import com.smartcampus.backend.entity.ApplicationStatus;
 import com.smartcampus.backend.repository.ApplicationRepository;
 import org.springframework.stereotype.Service;
 
@@ -11,33 +12,26 @@ public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
 
-    public ApplicationService(ApplicationRepository applicationRepository) {
+    public ApplicationService(
+            ApplicationRepository applicationRepository) {
         this.applicationRepository = applicationRepository;
     }
 
-    // Create application
     public Application createApplication(Application application) {
-
-        application.setStatus("PENDING");
-
+        application.setStatus(ApplicationStatus.PENDING);
         return applicationRepository.save(application);
     }
 
-    // Get all applications
     public List<Application> getAllApplications() {
-
         return applicationRepository.findAll();
     }
 
-    // Get application by ID
     public Application getApplicationById(Long id) {
-
         return applicationRepository.findById(id)
                 .orElseThrow(() ->
                         new RuntimeException("Application not found"));
     }
 
-    // Get applications by student
     public List<Application> getApplicationsByStudent(
             String studentEmail) {
 
@@ -45,7 +39,6 @@ public class ApplicationService {
                 .findByStudentEmail(studentEmail);
     }
 
-    // Get applications by opportunity
     public List<Application> getApplicationsByOpportunity(
             Long opportunityId) {
 
@@ -53,25 +46,32 @@ public class ApplicationService {
                 .findByOpportunityId(opportunityId);
     }
 
-    // Update application status
     public Application updateApplicationStatus(
             Long id,
             String status) {
 
-        Application application =
-                getApplicationById(id);
+        Application application = getApplicationById(id);
 
-        application.setStatus(status);
+        ApplicationStatus newStatus;
+
+        try {
+            newStatus = ApplicationStatus.valueOf(
+                    status.toUpperCase()
+            );
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    "Invalid application status. " +
+                    "Allowed values: PENDING, ACCEPTED, REJECTED"
+            );
+        }
+
+        application.setStatus(newStatus);
 
         return applicationRepository.save(application);
     }
 
-    // Delete application
     public void deleteApplication(Long id) {
-
-        Application application =
-                getApplicationById(id);
-
+        Application application = getApplicationById(id);
         applicationRepository.delete(application);
     }
 }
