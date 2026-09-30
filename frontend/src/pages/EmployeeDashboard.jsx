@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 
-function Dashboard() {
+function EmployeeDashboard() {
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -12,15 +12,16 @@ function Dashboard() {
     <div className="dashboard-page">
 
       <div className="dashboard-header">
+
         <div>
           <p className="dashboard-label">
             SMART CAMPUS
           </p>
 
-          <h1>Dashboard</h1>
+          <h1>Employee Dashboard</h1>
 
           <p className="dashboard-welcome">
-            Welcome to your Smart Campus dashboard.
+            Manage opportunities, applications, and referrals.
           </p>
         </div>
 
@@ -30,64 +31,72 @@ function Dashboard() {
         >
           Logout
         </button>
+
       </div>
 
       <div className="dashboard-cards">
 
         <div className="dashboard-card">
+
           <div className="card-icon">
             💼
           </div>
 
-          <h2>Opportunities</h2>
+          <h2>Manage Opportunities</h2>
 
           <p>
-            Explore jobs, internships, and other
-            career opportunities.
+            Create, update, and manage job and internship
+            opportunities.
           </p>
 
           <button
-            onClick={() => navigate('/opportunities')}
+            onClick={() => navigate('/employee/opportunities')}
           >
-            View Opportunities
+            Manage Opportunities
           </button>
+
         </div>
 
         <div className="dashboard-card">
+
           <div className="card-icon">
             📄
           </div>
 
-          <h2>My Applications</h2>
+          <h2>Applications</h2>
 
           <p>
-            Track the opportunities you have
-            applied for.
+            View applications submitted by students and
+            manage their status.
           </p>
 
           <button
-            onClick={() => navigate('/applications')}
+            onClick={() => navigate('/employee/applications')}
           >
             View Applications
           </button>
+
         </div>
 
         <div className="dashboard-card">
+
           <div className="card-icon">
             🤝
           </div>
 
-          <h2>My Referrals</h2>
+          <h2>Referral Requests</h2>
 
           <p>
-            View and manage your referral requests.
+            View student referral requests and update their
+            status.
           </p>
 
           <button
-            onClick={() => navigate('/referrals')}
+            onClick={() => navigate('/employee/referrals')}
           >
             View Referrals
           </button>
+
         </div>
 
       </div>
@@ -96,4 +105,4 @@ function Dashboard() {
   )
 }
 
-export default Dashboard
+export default EmployeeDashboard

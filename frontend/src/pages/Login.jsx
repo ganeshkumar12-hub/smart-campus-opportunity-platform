@@ -24,11 +24,25 @@ function Login() {
         throw new Error('Invalid email or password')
       }
 
-      const token = await response.text()
+const token = await response.text()
 
-      localStorage.setItem('token', token)
+localStorage.setItem('token', token)
 
-      navigate('/dashboard')
+const payload = JSON.parse(
+  atob(token.split('.')[1])
+)
+
+const role = payload.role
+
+if (role === 'STUDENT') {
+  navigate('/dashboard')
+} else if (role === 'EMPLOYEE') {
+  navigate('/employee/dashboard')
+} else if (role === 'ADMIN') {
+  navigate('/employee/dashboard')
+} else {
+  setError('Unknown user role')
+}
     } catch (error) {
       setError(error.message)
     }

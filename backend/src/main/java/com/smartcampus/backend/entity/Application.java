@@ -15,7 +15,6 @@ public class Application {
     @NotNull
     private Long opportunityId;
 
-    @NotBlank
     private String studentEmail;
 
     @NotBlank
