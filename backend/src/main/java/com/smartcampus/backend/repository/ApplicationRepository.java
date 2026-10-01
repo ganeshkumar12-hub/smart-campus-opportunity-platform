@@ -11,4 +11,9 @@ public interface ApplicationRepository
     List<Application> findByStudentEmail(String studentEmail);
 
     List<Application> findByOpportunityId(Long opportunityId);
+
+    boolean existsByOpportunityIdAndStudentEmail(
+            Long opportunityId,
+            String studentEmail
+    );
 }

@@ -12,6 +12,7 @@ import EmployeeOpportunities from './pages/EmployeeOpportunities'
 import EmployeeApplications from './pages/EmployeeApplications'
 import EmployeeReferrals from './pages/EmployeeReferrals' 
 import EditOpportunity from './pages/EditOpportunity'
+import RequestReferral from './pages/RequestReferral'
 function Home() {
   return (
     <>
@@ -136,6 +137,10 @@ function App() {
 <Route
   path="/employee/referrals"
   element={<EmployeeReferrals />}
+/>
+<Route
+  path="/referrals/new/:opportunityId"
+  element={<RequestReferral />}
 />
       </Routes>
 

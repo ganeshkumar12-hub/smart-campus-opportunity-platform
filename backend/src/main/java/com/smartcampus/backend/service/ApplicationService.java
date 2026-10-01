@@ -17,8 +17,26 @@ public class ApplicationService {
         this.applicationRepository = applicationRepository;
     }
 
-    public Application createApplication(Application application) {
-        application.setStatus(ApplicationStatus.PENDING);
+    public Application createApplication(
+            Application application) {
+
+        boolean alreadyApplied =
+                applicationRepository
+                        .existsByOpportunityIdAndStudentEmail(
+                                application.getOpportunityId(),
+                                application.getStudentEmail()
+                        );
+
+        if (alreadyApplied) {
+            throw new IllegalArgumentException(
+                    "You have already applied for this opportunity"
+            );
+        }
+
+        application.setStatus(
+                ApplicationStatus.PENDING
+        );
+
         return applicationRepository.save(application);
     }
 
@@ -29,7 +47,9 @@ public class ApplicationService {
     public Application getApplicationById(Long id) {
         return applicationRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Application not found"));
+                        new RuntimeException(
+                                "Application not found"
+                        ));
     }
 
     public List<Application> getApplicationsByStudent(
@@ -50,15 +70,19 @@ public class ApplicationService {
             Long id,
             String status) {
 
-        Application application = getApplicationById(id);
+        Application application =
+                getApplicationById(id);
 
         ApplicationStatus newStatus;
 
         try {
-            newStatus = ApplicationStatus.valueOf(
-                    status.toUpperCase()
-            );
+            newStatus =
+                    ApplicationStatus.valueOf(
+                            status.toUpperCase()
+                    );
+
         } catch (IllegalArgumentException e) {
+
             throw new IllegalArgumentException(
                     "Invalid application status. " +
                     "Allowed values: PENDING, ACCEPTED, REJECTED"
@@ -71,7 +95,10 @@ public class ApplicationService {
     }
 
     public void deleteApplication(Long id) {
-        Application application = getApplicationById(id);
+
+        Application application =
+                getApplicationById(id);
+
         applicationRepository.delete(application);
     }
 }

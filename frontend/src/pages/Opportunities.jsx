@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 function Opportunities() {
   const [opportunities, setOpportunities] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+const [typeFilter, setTypeFilter] = useState('')
+const [locationFilter, setLocationFilter] = useState('')
 
   const navigate = useNavigate()
 
@@ -38,7 +41,37 @@ function Opportunities() {
 
     fetchOpportunities()
   }, [])
+const filteredOpportunities = useMemo(() => {
+  return opportunities.filter((opportunity) => {
+    const searchText = search.toLowerCase().trim()
 
+    const matchesSearch =
+      opportunity.title.toLowerCase().includes(searchText) ||
+      opportunity.company.toLowerCase().includes(searchText) ||
+      opportunity.skills.toLowerCase().includes(searchText)
+
+    const matchesType =
+      !typeFilter ||
+      opportunity.type === typeFilter
+
+    const matchesLocation =
+      !locationFilter ||
+      opportunity.location
+        .toLowerCase()
+        .includes(locationFilter.toLowerCase())
+
+    return (
+      matchesSearch &&
+      matchesType &&
+      matchesLocation
+    )
+  })
+}, [
+  opportunities,
+  search,
+  typeFilter,
+  locationFilter,
+])
   return (
     <div className="opportunities-page">
 
@@ -74,6 +107,47 @@ function Opportunities() {
           {error}
         </p>
       )}
+      <div className="opportunity-filters">
+
+  <input
+    type="text"
+    placeholder="Search by title, company, or skill..."
+    value={search}
+    onChange={(event) => setSearch(event.target.value)}
+  />
+
+  <select
+    value={typeFilter}
+    onChange={(event) => setTypeFilter(event.target.value)}
+  >
+    <option value="">All Types</option>
+    <option value="Internship">Internship</option>
+    <option value="Full Time">Full Time</option>
+    <option value="Part Time">Part Time</option>
+    <option value="Job">Job</option>
+  </select>
+
+  <input
+    type="text"
+    placeholder="Filter by location..."
+    value={locationFilter}
+    onChange={(event) =>
+      setLocationFilter(event.target.value)
+    }
+  />
+
+  <button
+    className="clear-filter-btn"
+    onClick={() => {
+      setSearch('')
+      setTypeFilter('')
+      setLocationFilter('')
+    }}
+  >
+    Clear Filters
+  </button>
+
+</div>
 
       {!loading && !error && opportunities.length === 0 && (
         <div className="empty-state">
@@ -86,7 +160,7 @@ function Opportunities() {
       )}
 
       <div className="opportunities-grid">
-        {opportunities.map((opportunity) => (
+        {filteredOpportunities.map((opportunity) => (
           <div
             className="opportunity-card"
             key={opportunity.id}
@@ -117,14 +191,27 @@ function Opportunities() {
               </span>
             </div>
 
-            <button
-              className="apply-btn"
-              onClick={() =>
-                navigate(`/applications/new/${opportunity.id}`)
-              }
-            >
-              Apply Now
-            </button>
+<div className="opportunity-actions">
+
+  <button
+    className="apply-btn"
+    onClick={() =>
+      navigate(`/applications/new/${opportunity.id}`)
+    }
+  >
+    Apply Now
+  </button>
+
+  <button
+    className="referral-btn"
+    onClick={() =>
+      navigate(`/referrals/new/${opportunity.id}`)
+    }
+  >
+    Request Referral
+  </button>
+
+</div>
           </div>
         ))}
       </div>

@@ -1,5 +1,6 @@
 package com.smartcampus.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -15,11 +16,10 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @JsonIgnore
     private String password;
 
     private String role;
-
-    // Getters and Setters
 
     public Long getId() {
         return id;
