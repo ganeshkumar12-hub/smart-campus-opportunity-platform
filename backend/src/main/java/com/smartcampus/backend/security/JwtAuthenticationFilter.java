@@ -15,7 +15,8 @@ import java.io.IOException;
 import java.util.Collections;
 
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter
+        extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
 
@@ -30,6 +31,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
+        String requestPath = request.getServletPath();
+
+        if (requestPath.startsWith("/api/auth/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (requestPath.startsWith("/uploads/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authorizationHeader =
                 request.getHeader("Authorization");
 
@@ -43,7 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token =
                 authorizationHeader.substring(7);
 
-        if (jwtUtil.isTokenValid(token)) {
+        try {
 
             String email =
                     jwtUtil.extractEmail(token);
@@ -65,6 +78,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder
                     .getContext()
                     .setAuthentication(authentication);
+
+        } catch (Exception exception) {
+            // Invalid or expired JWT.
+            // Request will continue without authentication.
         }
 
         filterChain.doFilter(request, response);

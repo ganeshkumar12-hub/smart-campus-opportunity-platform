@@ -102,6 +102,7 @@ function EmployeeApplications() {
 
       if (!response.ok) {
         const message = await response.text()
+
         throw new Error(
           message || 'Failed to update application status'
         )
@@ -198,11 +199,13 @@ function EmployeeApplications() {
         selectedOpportunity &&
         applications.length === 0 && (
           <div className="empty-state">
+
             <h2>No Applications</h2>
 
             <p>
               No students have applied for this opportunity yet.
             </p>
+
           </div>
         )}
 
@@ -218,6 +221,7 @@ function EmployeeApplications() {
             <div className="application-item-header">
 
               <div>
+
                 <p className="application-number">
                   Application #{application.id}
                 </p>
@@ -225,6 +229,7 @@ function EmployeeApplications() {
                 <h2>
                   {application.studentEmail}
                 </h2>
+
               </div>
 
               <span
@@ -238,23 +243,28 @@ function EmployeeApplications() {
             <div className="application-info">
 
               <div>
+
                 <strong>Resume</strong>
 
                 <a
+                  className="view-resume-btn"
                   href={application.resumeUrl}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                 >
-                  View Resume
+                  📄 View Resume
                 </a>
+
               </div>
 
               <div>
+
                 <strong>Cover Letter</strong>
 
                 <p>
                   {application.coverLetter}
                 </p>
+
               </div>
 
             </div>
@@ -269,7 +279,9 @@ function EmployeeApplications() {
                     'ACCEPTED'
                   )
                 }
-                disabled={application.status === 'ACCEPTED'}
+                disabled={
+                  application.status === 'ACCEPTED'
+                }
               >
                 Accept
               </button>
@@ -282,7 +294,9 @@ function EmployeeApplications() {
                     'REJECTED'
                   )
                 }
-                disabled={application.status === 'REJECTED'}
+                disabled={
+                  application.status === 'REJECTED'
+                }
               >
                 Reject
               </button>

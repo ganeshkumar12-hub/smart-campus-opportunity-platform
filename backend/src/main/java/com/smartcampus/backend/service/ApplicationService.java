@@ -2,24 +2,45 @@ package com.smartcampus.backend.service;
 
 import com.smartcampus.backend.entity.Application;
 import com.smartcampus.backend.entity.ApplicationStatus;
+import com.smartcampus.backend.entity.Opportunity;
 import com.smartcampus.backend.repository.ApplicationRepository;
+import com.smartcampus.backend.repository.OpportunityRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
+    private final OpportunityRepository opportunityRepository;
 
     public ApplicationService(
-            ApplicationRepository applicationRepository) {
+            ApplicationRepository applicationRepository,
+            OpportunityRepository opportunityRepository) {
+
         this.applicationRepository = applicationRepository;
+        this.opportunityRepository = opportunityRepository;
     }
 
     public Application createApplication(
             Application application) {
 
+        /*
+         * Check whether the opportunity exists.
+         */
+        Opportunity opportunity =
+                opportunityRepository
+                        .findById(application.getOpportunityId())
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "Opportunity not found"
+                                ));
+
+        /*
+         * Check duplicate application.
+         */
         boolean alreadyApplied =
                 applicationRepository
                         .existsByOpportunityIdAndStudentEmail(
@@ -33,6 +54,33 @@ public class ApplicationService {
             );
         }
 
+        /*
+         * Check opportunity deadline.
+         */
+        try {
+
+            LocalDate deadline =
+                    LocalDate.parse(
+                            opportunity.getDeadline()
+                    );
+
+            if (deadline.isBefore(LocalDate.now())) {
+
+                throw new IllegalArgumentException(
+                        "The application deadline has passed"
+                );
+            }
+
+        } catch (java.time.format.DateTimeParseException e) {
+
+            throw new IllegalArgumentException(
+                    "Invalid opportunity deadline format"
+            );
+        }
+
+        /*
+         * Everything is valid.
+         */
         application.setStatus(
                 ApplicationStatus.PENDING
         );
@@ -45,6 +93,7 @@ public class ApplicationService {
     }
 
     public Application getApplicationById(Long id) {
+
         return applicationRepository.findById(id)
                 .orElseThrow(() ->
                         new RuntimeException(
@@ -76,6 +125,7 @@ public class ApplicationService {
         ApplicationStatus newStatus;
 
         try {
+
             newStatus =
                     ApplicationStatus.valueOf(
                             status.toUpperCase()

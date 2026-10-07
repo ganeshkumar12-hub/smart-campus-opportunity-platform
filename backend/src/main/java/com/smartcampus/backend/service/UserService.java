@@ -23,15 +23,21 @@ public class UserService {
         this.jwtUtil = jwtUtil;
     }
 
-    public User registerUser(User user) {
+public User registerUser(User user) {
 
-        String encryptedPassword =
-                passwordEncoder.encode(user.getPassword());
-
-        user.setPassword(encryptedPassword);
-
-        return userRepository.save(user);
+    if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+        throw new IllegalArgumentException(
+                "Email already registered"
+        );
     }
+
+    String encryptedPassword =
+            passwordEncoder.encode(user.getPassword());
+
+    user.setPassword(encryptedPassword);
+
+    return userRepository.save(user);
+}
 
     public String loginUser(String email, String password) {
 

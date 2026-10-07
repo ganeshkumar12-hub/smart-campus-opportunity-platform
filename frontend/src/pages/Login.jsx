@@ -39,7 +39,7 @@ if (role === 'STUDENT') {
 } else if (role === 'EMPLOYEE') {
   navigate('/employee/dashboard')
 } else if (role === 'ADMIN') {
-  navigate('/employee/dashboard')
+  navigate('/admin/dashboard')
 } else {
   setError('Unknown user role')
 }

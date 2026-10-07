@@ -27,7 +27,6 @@ public class SecurityConfig {
                 jwtAuthenticationFilter;
     }
 
-    // CORS configuration
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
@@ -67,31 +66,50 @@ public class SecurityConfig {
         return source;
     }
 
-    // Spring Security configuration
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http) throws Exception {
 
         http
-                // Enable CORS
                 .cors(cors -> {})
 
-                // Disable CSRF for REST API
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf ->
+                        csrf.disable()
+                )
 
-                // JWT authentication is stateless
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
-                // Authorization rules
                 .authorizeHttpRequests(auth -> auth
 
-                        // Authentication endpoints
-                        .requestMatchers("/api/auth/**")
+                        // =========================
+                        // AUTH
+                        // =========================
+
+                        .requestMatchers(
+                                "/api/auth/**"
+                        )
                         .permitAll()
+
+
+                        // =========================
+                        // RESUME UPLOADS
+                        // =========================
+
+                        .requestMatchers(
+                                "/uploads/**"
+                        )
+                        .permitAll()
+
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/resumes/upload"
+                        )
+                        .hasRole("STUDENT")
+
 
                         // =========================
                         // OPPORTUNITIES
@@ -101,24 +119,34 @@ public class SecurityConfig {
                                 HttpMethod.POST,
                                 "/api/opportunities"
                         )
-                        .hasAnyRole("EMPLOYEE", "ADMIN")
+                        .hasAnyRole(
+                                "EMPLOYEE",
+                                "ADMIN"
+                        )
 
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/opportunities/**"
                         )
-                        .hasAnyRole("EMPLOYEE", "ADMIN")
+                        .hasAnyRole(
+                                "EMPLOYEE",
+                                "ADMIN"
+                        )
 
                         .requestMatchers(
                                 HttpMethod.DELETE,
                                 "/api/opportunities/**"
                         )
-                        .hasAnyRole("EMPLOYEE", "ADMIN")
+                        .hasAnyRole(
+                                "EMPLOYEE",
+                                "ADMIN"
+                        )
 
                         .requestMatchers(
                                 "/api/opportunities/**"
                         )
                         .authenticated()
+
 
                         // =========================
                         // REFERRALS
@@ -134,7 +162,10 @@ public class SecurityConfig {
                                 HttpMethod.PUT,
                                 "/api/referrals/**"
                         )
-                        .hasAnyRole("EMPLOYEE", "ADMIN")
+                        .hasAnyRole(
+                                "EMPLOYEE",
+                                "ADMIN"
+                        )
 
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -146,7 +177,11 @@ public class SecurityConfig {
                                 HttpMethod.DELETE,
                                 "/api/referrals/**"
                         )
-                        .hasAnyRole("EMPLOYEE", "ADMIN")
+                        .hasAnyRole(
+                                "EMPLOYEE",
+                                "ADMIN"
+                        )
+
 
                         // =========================
                         // APPLICATIONS
@@ -162,19 +197,28 @@ public class SecurityConfig {
                                 HttpMethod.PUT,
                                 "/api/applications/**"
                         )
-                        .hasAnyRole("EMPLOYEE", "ADMIN")
+                        .hasAnyRole(
+                                "EMPLOYEE",
+                                "ADMIN"
+                        )
 
                         .requestMatchers(
                                 HttpMethod.DELETE,
                                 "/api/applications/**"
                         )
-                        .hasAnyRole("EMPLOYEE", "ADMIN")
+                        .hasAnyRole(
+                                "EMPLOYEE",
+                                "ADMIN"
+                        )
 
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/applications/opportunity/**"
                         )
-                        .hasAnyRole("EMPLOYEE", "ADMIN")
+                        .hasAnyRole(
+                                "EMPLOYEE",
+                                "ADMIN"
+                        )
 
                         .requestMatchers(
                                 HttpMethod.GET,
@@ -188,21 +232,48 @@ public class SecurityConfig {
                         )
                         .authenticated()
 
+
                         // =========================
                         // USERS
                         // =========================
 
+                        // Employees list can be accessed
+                        // by authenticated users
                         .requestMatchers(
-                                "/api/users/**"
+                                "/api/users/employees"
                         )
                         .authenticated()
 
-                        // Everything else
+                        // Own profile can be accessed
+                        // by authenticated users
+                        .requestMatchers(
+                                "/api/users/profile"
+                        )
+                        .authenticated()
+
+                        // Admin can view all users
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/users"
+                        )
+                        .hasRole("ADMIN")
+
+                        // Admin can delete users
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/users/**"
+                        )
+                        .hasRole("ADMIN")
+
+
+                        // =========================
+                        // EVERYTHING ELSE
+                        // =========================
+
                         .anyRequest()
                         .authenticated()
                 )
 
-                // JWT filter
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class

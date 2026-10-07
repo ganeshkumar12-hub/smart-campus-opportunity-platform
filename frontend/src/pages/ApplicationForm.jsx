@@ -5,11 +5,32 @@ function ApplicationForm() {
   const { opportunityId } = useParams()
   const navigate = useNavigate()
 
-  const [resumeUrl, setResumeUrl] = useState('')
+  const [resumeFile, setResumeFile] = useState(null)
   const [coverLetter, setCoverLetter] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0]
+
+    setError('')
+    setSuccess('')
+
+    if (!file) {
+      setResumeFile(null)
+      return
+    }
+
+    if (file.type !== 'application/pdf') {
+      setError('Only PDF files are allowed')
+      setResumeFile(null)
+      event.target.value = ''
+      return
+    }
+
+    setResumeFile(file)
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -26,7 +47,56 @@ function ApplicationForm() {
         return
       }
 
-      const response = await fetch(
+      if (!resumeFile) {
+        throw new Error('Please select your resume PDF')
+      }
+
+      /*
+       * STEP 1:
+       * Upload the resume PDF
+       */
+      const formData = new FormData()
+
+      formData.append('file', resumeFile)
+
+      const uploadResponse = await fetch(
+        'http://localhost:8080/api/resumes/upload',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      )
+
+      if (!uploadResponse.ok) {
+        const message = await uploadResponse.text()
+
+        throw new Error(
+          message || 'Failed to upload resume'
+        )
+      }
+
+      /*
+       * Backend returns something like:
+       * /uploads/resumes/xxxxx.pdf
+       */
+      const uploadedResumePath =
+        await uploadResponse.text()
+
+      /*
+       * Convert the relative backend path
+       * into a complete URL.
+       */
+      const resumeUrl =
+        `http://localhost:8080${uploadedResumePath}`
+
+      /*
+       * STEP 2:
+       * Submit the application
+       */
+      const applicationResponse = await fetch(
         'http://localhost:8080/api/applications',
         {
           method: 'POST',
@@ -42,19 +112,30 @@ function ApplicationForm() {
         }
       )
 
-      if (!response.ok) {
-        const message = await response.text()
-        throw new Error(message || 'Failed to submit application')
+      if (!applicationResponse.ok) {
+        const message =
+          await applicationResponse.text()
+
+        throw new Error(
+          message || 'Failed to submit application'
+        )
       }
 
-      const application = await response.json()
+      const application =
+        await applicationResponse.json()
 
       setSuccess(
         `Application submitted successfully. Status: ${application.status}`
       )
 
-      setResumeUrl('')
+      setResumeFile(null)
       setCoverLetter('')
+
+      /*
+       * Clear the file input.
+       */
+      document.getElementById('resumeFile').value = ''
+
     } catch (error) {
       setError(error.message)
     } finally {
@@ -84,23 +165,29 @@ function ApplicationForm() {
         <form onSubmit={handleSubmit}>
 
           <div className="form-group">
-            <label htmlFor="resumeUrl">
-              Resume URL
+
+            <label htmlFor="resumeFile">
+              Resume PDF
             </label>
 
             <input
-              id="resumeUrl"
-              type="url"
-              value={resumeUrl}
-              onChange={(event) =>
-                setResumeUrl(event.target.value)
-              }
-              placeholder="https://example.com/resume.pdf"
+              id="resumeFile"
+              type="file"
+              accept=".pdf,application/pdf"
+              onChange={handleFileChange}
               required
             />
+
+            {resumeFile && (
+              <p className="file-selected">
+                Selected: {resumeFile.name}
+              </p>
+            )}
+
           </div>
 
           <div className="form-group">
+
             <label htmlFor="coverLetter">
               Cover Letter
             </label>
@@ -115,6 +202,7 @@ function ApplicationForm() {
               rows="8"
               required
             />
+
           </div>
 
           {error && (
@@ -134,7 +222,10 @@ function ApplicationForm() {
             <button
               type="button"
               className="back-btn"
-              onClick={() => navigate('/opportunities')}
+              onClick={() =>
+                navigate('/opportunities')
+              }
+              disabled={loading}
             >
               Back
             </button>
@@ -145,7 +236,7 @@ function ApplicationForm() {
               disabled={loading}
             >
               {loading
-                ? 'Submitting...'
+                ? 'Uploading & Submitting...'
                 : 'Submit Application'}
             </button>
 

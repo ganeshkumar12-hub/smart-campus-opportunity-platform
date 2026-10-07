@@ -13,6 +13,8 @@ import EmployeeApplications from './pages/EmployeeApplications'
 import EmployeeReferrals from './pages/EmployeeReferrals' 
 import EditOpportunity from './pages/EditOpportunity'
 import RequestReferral from './pages/RequestReferral'
+import AdminDashboard from './pages/AdminDashboard'
+import AdminUsers from './pages/AdminUsers'
 function Home() {
   return (
     <>
@@ -142,6 +144,11 @@ function App() {
   path="/referrals/new/:opportunityId"
   element={<RequestReferral />}
 />
+<Route
+  path="/admin/dashboard"
+  element={<AdminDashboard />}
+/>
+<Route path="/admin/users" element={<AdminUsers />} />
       </Routes>
 
       {/* Footer */}

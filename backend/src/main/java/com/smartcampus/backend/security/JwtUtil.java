@@ -29,7 +29,10 @@ public class JwtUtil {
                 .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(
-                        new Date(System.currentTimeMillis() + EXPIRATION_TIME)
+                        new Date(
+                                System.currentTimeMillis()
+                                        + EXPIRATION_TIME
+                        )
                 )
                 .signWith(key)
                 .compact();
@@ -58,6 +61,7 @@ public class JwtUtil {
     public boolean isTokenValid(String token) {
 
         try {
+
             Jwts.parser()
                     .verifyWith(key)
                     .build()
@@ -66,6 +70,7 @@ public class JwtUtil {
             return true;
 
         } catch (Exception e) {
+
             return false;
         }
     }
