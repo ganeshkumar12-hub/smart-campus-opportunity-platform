@@ -23,13 +23,31 @@ public class UserService {
         this.jwtUtil = jwtUtil;
     }
 
+
 public User registerUser(User user) {
+
+    if (user.getEmail() == null ||
+            user.getEmail().isBlank()) {
+        throw new IllegalArgumentException(
+                "Email is required"
+        );
+    }
+
+    if (user.getPassword() == null ||
+            user.getPassword().isBlank()) {
+        throw new IllegalArgumentException(
+                "Password is required"
+        );
+    }
 
     if (userRepository.findByEmail(user.getEmail()).isPresent()) {
         throw new IllegalArgumentException(
                 "Email already registered"
         );
     }
+
+    // Public registration must never assign privileged roles.
+    user.setRole("STUDENT");
 
     String encryptedPassword =
             passwordEncoder.encode(user.getPassword());
@@ -38,6 +56,7 @@ public User registerUser(User user) {
 
     return userRepository.save(user);
 }
+
 
     public String loginUser(String email, String password) {
 
