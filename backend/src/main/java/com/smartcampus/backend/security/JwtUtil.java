@@ -2,6 +2,8 @@ package com.smartcampus.backend.security;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -11,16 +13,18 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    private static final String SECRET_KEY =
-            "SmartCampusSecretKeyForJWTAuthentication2026";
+    private final SecretKey key;
 
     private static final long EXPIRATION_TIME =
             1000 * 60 * 60; // 1 hour
 
-    private final SecretKey key =
-            Keys.hmacShaKeyFor(
-                    SECRET_KEY.getBytes(StandardCharsets.UTF_8)
-            );
+    public JwtUtil(
+            @Value("${jwt.secret}") String secret) {
+
+        this.key = Keys.hmacShaKeyFor(
+                secret.getBytes(StandardCharsets.UTF_8)
+        );
+    }
 
     public String generateToken(String email, String role) {
 
@@ -61,7 +65,6 @@ public class JwtUtil {
     public boolean isTokenValid(String token) {
 
         try {
-
             Jwts.parser()
                     .verifyWith(key)
                     .build()
@@ -70,7 +73,6 @@ public class JwtUtil {
             return true;
 
         } catch (Exception e) {
-
             return false;
         }
     }
