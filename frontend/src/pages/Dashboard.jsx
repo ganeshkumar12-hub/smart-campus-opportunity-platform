@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -11,12 +12,13 @@ function Dashboard() {
     referrals: 0,
   })
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    navigate('/login')
-  }
+  const [loading, setLoading] = useState(true)
+
+
 
   useEffect(() => {
+    let isMounted = true
+
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem('token')
@@ -41,25 +43,16 @@ function Dashboard() {
           applicationsResponse,
           referralsResponse,
         ] = await Promise.all([
-          fetch(
-            'http://localhost:8080/api/opportunities',
-            {
-              headers,
-            }
-          ),
-
+          fetch('http://localhost:8080/api/opportunities', {
+            headers,
+          }),
           fetch(
             `http://localhost:8080/api/applications/student/${encodeURIComponent(email)}`,
-            {
-              headers,
-            }
+            { headers }
           ),
-
           fetch(
             `http://localhost:8080/api/referrals/student/${encodeURIComponent(email)}`,
-            {
-              headers,
-            }
+            { headers }
           ),
         ])
 
@@ -68,240 +61,190 @@ function Dashboard() {
           !applicationsResponse.ok ||
           !referralsResponse.ok
         ) {
-          throw new Error(
-            'Failed to load dashboard statistics'
-          )
+          throw new Error('Failed to load dashboard statistics')
         }
 
-        const opportunities =
-          await opportunitiesResponse.json()
+        const [opportunities, applications, referrals] =
+          await Promise.all([
+            opportunitiesResponse.json(),
+            applicationsResponse.json(),
+            referralsResponse.json(),
+          ])
 
-        const applications =
-          await applicationsResponse.json()
+        if (!Array.isArray(opportunities) ||
+            !Array.isArray(applications) ||
+            !Array.isArray(referrals)) {
+          throw new Error('Unexpected dashboard response format')
+        }
 
-        const referrals =
-          await referralsResponse.json()
+        const pendingApplications = applications.filter(
+          (application) => application.status === 'PENDING'
+        ).length
 
-        const pendingApplications =
-          applications.filter(
-            (application) =>
-              application.status === 'PENDING'
-          ).length
-
-        setStats({
-          opportunities: opportunities.length,
-          applications: applications.length,
-          pendingApplications:
+        if (isMounted) {
+          setStats({
+            opportunities: opportunities.length,
+            applications: applications.length,
             pendingApplications,
-          referrals: referrals.length,
-        })
+            referrals: referrals.length,
+          })
+        }
       } catch (error) {
-        console.error(
-          'Dashboard statistics error:',
-          error
-        )
+        console.error('Dashboard statistics error:', error)
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchStats()
+
+    return () => {
+      isMounted = false
+    }
   }, [navigate])
 
+  const statItems = [
+    {
+      label: 'Total Opportunities',
+      value: stats.opportunities,
+      icon: '💼',
+      color: 'blue',
+    },
+    {
+      label: 'My Applications',
+      value: stats.applications,
+      icon: '📄',
+      color: 'purple',
+    },
+    {
+      label: 'Pending Applications',
+      value: stats.pendingApplications,
+      icon: '⏳',
+      color: 'orange',
+    },
+    {
+      label: 'My Referrals',
+      value: stats.referrals,
+      icon: '🤝',
+      color: 'green',
+    },
+  ]
+
+  const dashboardItems = [
+    {
+      title: 'Explore Opportunities',
+      description:
+        'Discover jobs, internships, and career opportunities that match your goals.',
+      icon: '💼',
+      button: 'Browse Opportunities',
+      path: '/opportunities',
+      color: 'blue',
+    },
+    {
+      title: 'My Applications',
+      description:
+        'Keep track of your applications and follow their progress in one place.',
+      icon: '📄',
+      button: 'View Applications',
+      path: '/applications',
+      color: 'purple',
+    },
+    {
+      title: 'My Referrals',
+      description:
+        'Manage your referral requests and explore opportunities through connections.',
+      icon: '🤝',
+      button: 'View Referrals',
+      path: '/referrals',
+      color: 'green',
+    },
+  ]
+
   return (
-    <div className="dashboard-page">
-
-      {/* Dashboard Header */}
-
-      <div className="dashboard-header">
-
+    <main className="dashboard-page dashboard-redesign">
+      <section className="dashboard-header">
         <div>
-
-          <p className="dashboard-label">
-            SMART CAMPUS
-          </p>
-
-          <h1>Dashboard</h1>
-
+          <p className="dashboard-label">YOUR CAREER SPACE</p>
+          <h1>Welcome to your dashboard</h1>
           <p className="dashboard-welcome">
-            Welcome to your Smart Campus dashboard.
+            Your next opportunity starts here. Track applications,
+            explore careers, and build meaningful connections.
           </p>
-
         </div>
 
-        <button
-          className="logout-btn"
-          onClick={handleLogout}
-        >
-          Logout
-        </button>
+      </section>
 
-      </div>
-
-
-      {/* Dashboard Statistics */}
-
-      <div className="dashboard-stats">
-
-        <div className="stat-card">
-
-          <span className="stat-icon">
-            💼
-          </span>
-
+      <section className="dashboard-overview">
+        <div className="section-heading">
           <div>
-
-            <p>Total Opportunities</p>
-
-            <h2>
-              {stats.opportunities}
-            </h2>
-
+            <h2>Your overview</h2>
+            <p>Here is a snapshot of your career activity.</p>
           </div>
-
-        </div>
-
-
-        <div className="stat-card">
-
-          <span className="stat-icon">
-            📄
+          <span className="overview-badge">
+            {loading ? 'Updating...' : 'Live overview'}
           </span>
+        </div>
 
+        <div className="dashboard-stats">
+          {statItems.map((item) => (
+            <article
+              className={`stat-card stat-${item.color}`}
+              key={item.label}
+            >
+              <div className="stat-card-top">
+                <span className="stat-icon" aria-hidden="true">
+                  {item.icon}
+                </span>
+                <span className="stat-indicator" />
+              </div>
+
+              <p>{item.label}</p>
+
+              <h2>
+                {loading ? '—' : item.value}
+              </h2>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="dashboard-actions">
+        <div className="section-heading">
           <div>
-
-            <p>My Applications</p>
-
-            <h2>
-              {stats.applications}
-            </h2>
-
+            <h2>Quick access</h2>
+            <p>Everything you need to move forward.</p>
           </div>
-
         </div>
 
+        <div className="dashboard-cards">
+          {dashboardItems.map((item) => (
+            <article
+              className={`dashboard-card action-card action-${item.color}`}
+              key={item.title}
+            >
+              <div className="card-icon" aria-hidden="true">
+                {item.icon}
+              </div>
 
-        <div className="stat-card">
+              <div className="action-card-content">
+                <h2>{item.title}</h2>
+                <p>{item.description}</p>
+              </div>
 
-          <span className="stat-icon">
-            ⏳
-          </span>
-
-          <div>
-
-            <p>Pending Applications</p>
-
-            <h2>
-              {stats.pendingApplications}
-            </h2>
-
-          </div>
-
+              <button
+                type="button"
+                onClick={() => navigate(item.path)}
+              >
+                {item.button}
+                <span aria-hidden="true"> →</span>
+              </button>
+            </article>
+          ))}
         </div>
-
-
-        <div className="stat-card">
-
-          <span className="stat-icon">
-            🤝
-          </span>
-
-          <div>
-
-            <p>My Referrals</p>
-
-            <h2>
-              {stats.referrals}
-            </h2>
-
-          </div>
-
-        </div>
-
-      </div>
-
-
-      {/* Dashboard Cards */}
-
-      <div className="dashboard-cards">
-
-        <div className="dashboard-card">
-
-          <div className="card-icon">
-            💼
-          </div>
-
-          <h2>
-            Opportunities
-          </h2>
-
-          <p>
-            Explore jobs, internships, and other
-            career opportunities.
-          </p>
-
-          <button
-            onClick={() =>
-              navigate('/opportunities')
-            }
-          >
-            View Opportunities
-          </button>
-
-        </div>
-
-
-        <div className="dashboard-card">
-
-          <div className="card-icon">
-            📄
-          </div>
-
-          <h2>
-            My Applications
-          </h2>
-
-          <p>
-            Track the opportunities you have
-            applied for.
-          </p>
-
-          <button
-            onClick={() =>
-              navigate('/applications')
-            }
-          >
-            View Applications
-          </button>
-
-        </div>
-
-
-        <div className="dashboard-card">
-
-          <div className="card-icon">
-            🤝
-          </div>
-
-          <h2>
-            My Referrals
-          </h2>
-
-          <p>
-            View and manage your referral requests.
-          </p>
-
-          <button
-            onClick={() =>
-              navigate('/referrals')
-            }
-          >
-            View Referrals
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
+      </section>
+    </main>
   )
 }
 

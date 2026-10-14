@@ -14,6 +14,8 @@ function RequestReferral() {
   const [success, setSuccess] = useState('')
 
   useEffect(() => {
+    let isMounted = true
+
     const fetchEmployees = async () => {
       try {
         const token = localStorage.getItem('token')
@@ -34,7 +36,6 @@ function RequestReferral() {
 
         if (!response.ok) {
           const responseMessage = await response.text()
-
           throw new Error(
             responseMessage || 'Failed to load employees'
           )
@@ -42,15 +43,25 @@ function RequestReferral() {
 
         const data = await response.json()
 
-        setEmployees(data)
+        if (isMounted) {
+          setEmployees(data)
+        }
       } catch (error) {
-        setError(error.message)
+        if (isMounted) {
+          setError(error.message)
+        }
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchEmployees()
+
+    return () => {
+      isMounted = false
+    }
   }, [navigate])
 
   const handleSubmit = async (event) => {
@@ -79,7 +90,7 @@ function RequestReferral() {
           body: JSON.stringify({
             opportunityId: Number(opportunityId),
             referrerEmail,
-            message,
+            message: message.trim(),
           }),
         }
       )
@@ -88,15 +99,14 @@ function RequestReferral() {
         const responseMessage = await response.text()
 
         throw new Error(
-          responseMessage ||
-            'Failed to submit referral request'
+          responseMessage || 'Failed to submit referral request'
         )
       }
 
       const referral = await response.json()
 
       setSuccess(
-        `Referral request submitted successfully. Status: ${referral.status}`
+        `Your referral request was submitted successfully. Status: ${referral.status}`
       )
 
       setReferrerEmail('')
@@ -109,35 +119,44 @@ function RequestReferral() {
   }
 
   return (
-    <div className="application-page">
+    <main className="application-page referral-page">
+      <section className="application-card referral-card">
+        <div className="referral-heading">
+          <div className="referral-heading-icon" aria-hidden="true">
+            🤝
+          </div>
 
-      <div className="application-card">
+          <p className="dashboard-label">SMART CAMPUS</p>
 
-        <p className="dashboard-label">
-          SMART CAMPUS
-        </p>
+          <h1>Request a Referral</h1>
 
-        <h1>Request Referral</h1>
+          <p className="application-subtitle">
+            Connect with an employee who can help you take the next
+            step in your career.
+          </p>
+        </div>
 
-        <p className="application-subtitle">
-          Ask an employee to refer you for this opportunity.
-        </p>
+        <div className="opportunity-id referral-opportunity">
+          <span className="referral-opportunity-icon" aria-hidden="true">
+            💼
+          </span>
 
-        <div className="opportunity-id">
-          Opportunity ID: {opportunityId}
+          <span>
+            Opportunity ID
+            <strong>#{opportunityId}</strong>
+          </span>
         </div>
 
         {loading ? (
-          <p className="status-message">
-            Loading employees...
-          </p>
+          <div className="referral-loading" role="status">
+            <span className="referral-spinner" />
+            <p>Finding available employees...</p>
+          </div>
         ) : (
-          <form onSubmit={handleSubmit}>
-
+          <form className="referral-form" onSubmit={handleSubmit}>
             <div className="form-group">
-
               <label htmlFor="referrerEmail">
-                Select Employee
+                Select an employee
               </label>
 
               <select
@@ -147,9 +166,10 @@ function RequestReferral() {
                   setReferrerEmail(event.target.value)
                 }
                 required
+                disabled={employees.length === 0 || submitting}
               >
                 <option value="">
-                  Select an employee
+                  Choose an employee to contact
                 </option>
 
                 {employees.map((employee) => (
@@ -157,17 +177,21 @@ function RequestReferral() {
                     key={employee.id}
                     value={employee.email}
                   >
-                    {employee.name} - {employee.email}
+                    {employee.name} — {employee.email}
                   </option>
                 ))}
               </select>
 
+              {employees.length === 0 && (
+                <p className="referral-field-hint">
+                  No employees are currently available to select.
+                </p>
+              )}
             </div>
 
             <div className="form-group">
-
               <label htmlFor="message">
-                Message
+                Your message
               </label>
 
               <textarea
@@ -176,56 +200,57 @@ function RequestReferral() {
                 onChange={(event) =>
                   setMessage(event.target.value)
                 }
-                placeholder="Write a message explaining why you are requesting this referral..."
-                rows="8"
+                placeholder="Introduce yourself, explain your interest in this opportunity, and politely ask for a referral..."
+                rows={6}
+                maxLength={1000}
                 required
+                disabled={submitting}
               />
 
+              <div className="referral-message-footer">
+                <span>Keep your message clear and professional.</span>
+                <span>{message.length}/1000</span>
+              </div>
             </div>
 
             {error && (
-              <p className="application-error">
+              <div className="referral-alert referral-alert-error" role="alert">
                 {error}
-              </p>
+              </div>
             )}
 
             {success && (
-              <p className="application-success">
+              <div
+                className="referral-alert referral-alert-success"
+                role="status"
+              >
                 {success}
-              </p>
+              </div>
             )}
 
-            <div className="application-actions">
-
+            <div className="application-actions referral-actions">
               <button
                 type="button"
                 className="back-btn"
-                onClick={() =>
-                  navigate('/opportunities')
-                }
+                onClick={() => navigate('/opportunities')}
+                disabled={submitting}
               >
-                Back
+                ← Back to opportunities
               </button>
 
               <button
                 type="submit"
-                className="apply-submit"
-                disabled={submitting}
+                className="apply-submit referral-submit"
+                disabled={submitting || loading || employees.length === 0}
               >
-                {submitting
-                  ? 'Submitting...'
-                  : 'Request Referral'}
+                {submitting ? 'Submitting...' : 'Send referral request →'}
               </button>
-
             </div>
-
           </form>
         )}
-
-      </div>
-
-    </div>
+      </section>
+    </main>
   )
 }
 
-export default RequestReferral
+export default RequestReferral  
