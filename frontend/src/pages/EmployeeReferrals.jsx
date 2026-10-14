@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -18,8 +19,18 @@ function EmployeeReferrals() {
           return
         }
 
+        const payload = JSON.parse(
+          atob(token.split('.')[1])
+        )
+
+        const email = payload.sub
+
+        if (!email) {
+          throw new Error('Unable to identify the logged-in employee')
+        }
+
         const response = await fetch(
-          'http://localhost:8080/api/referrals',
+          `http://localhost:8080/api/referrals/referrer/${encodeURIComponent(email)}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -29,14 +40,12 @@ function EmployeeReferrals() {
 
         if (!response.ok) {
           const message = await response.text()
-
           throw new Error(
-            message || 'Failed to load referrals'
+            message || 'Failed to load referral requests'
           )
         }
 
         const data = await response.json()
-
         setReferrals(data)
       } catch (error) {
         setError(error.message)
@@ -50,10 +59,17 @@ function EmployeeReferrals() {
 
   const updateStatus = async (referralId, status) => {
     try {
+      setError('')
+
       const token = localStorage.getItem('token')
 
+      if (!token) {
+        navigate('/login')
+        return
+      }
+
       const response = await fetch(
-        `http://localhost:8080/api/referrals/${referralId}/status?status=${status}`,
+        `http://localhost:8080/api/referrals/${referralId}/status?status=${encodeURIComponent(status)}`,
         {
           method: 'PUT',
           headers: {
@@ -64,7 +80,6 @@ function EmployeeReferrals() {
 
       if (!response.ok) {
         const message = await response.text()
-
         throw new Error(
           message || 'Failed to update referral status'
         )
@@ -86,9 +101,7 @@ function EmployeeReferrals() {
 
   return (
     <div className="referrals-page">
-
       <div className="page-header">
-
         <div>
           <p className="dashboard-label">
             SMART CAMPUS
@@ -97,7 +110,7 @@ function EmployeeReferrals() {
           <h1>Referral Requests</h1>
 
           <p>
-            Review and manage student referral requests.
+            Review and manage student referral requests assigned to you.
           </p>
         </div>
 
@@ -107,7 +120,6 @@ function EmployeeReferrals() {
         >
           Back to Dashboard
         </button>
-
       </div>
 
       {loading && (
@@ -122,29 +134,23 @@ function EmployeeReferrals() {
         </p>
       )}
 
-      {!loading &&
-        !error &&
-        referrals.length === 0 && (
-          <div className="empty-state">
-            <h2>No Referral Requests</h2>
+      {!loading && !error && referrals.length === 0 && (
+        <div className="empty-state">
+          <h2>No Referral Requests</h2>
 
-            <p>
-              There are currently no referral requests.
-            </p>
-          </div>
-        )}
+          <p>
+            There are currently no referral requests assigned to you.
+          </p>
+        </div>
+      )}
 
       <div className="referrals-grid">
-
         {referrals.map((referral) => (
-
           <div
             className="referral-item"
             key={referral.id}
           >
-
             <div className="referral-item-header">
-
               <div>
                 <p className="referral-number">
                   Referral #{referral.id}
@@ -160,48 +166,35 @@ function EmployeeReferrals() {
               >
                 {referral.status}
               </span>
-
             </div>
 
             <div className="referral-info">
-
               <div>
                 <strong>Student</strong>
-
-                <p>
-                  {referral.studentEmail}
-                </p>
+                <p>{referral.studentEmail}</p>
               </div>
 
               <div>
                 <strong>Referrer</strong>
-
-                <p>
-                  {referral.referrerEmail}
-                </p>
+                <p>{referral.referrerEmail}</p>
               </div>
 
               <div>
                 <strong>Message</strong>
-
-                <p>
-                  {referral.message}
-                </p>
+                <p>{referral.message}</p>
               </div>
-
             </div>
 
             <div className="employee-referral-actions">
-
               <button
                 className="accept-btn"
                 onClick={() =>
-                  updateStatus(
-                    referral.id,
-                    'ACCEPTED'
-                  )
+                  updateStatus(referral.id, 'ACCEPTED')
                 }
-                disabled={referral.status === 'ACCEPTED'}
+                disabled={
+                  referral.status === 'ACCEPTED' ||
+                  loading
+                }
               >
                 Accept
               </button>
@@ -209,26 +202,21 @@ function EmployeeReferrals() {
               <button
                 className="reject-btn"
                 onClick={() =>
-                  updateStatus(
-                    referral.id,
-                    'REJECTED'
-                  )
+                  updateStatus(referral.id, 'REJECTED')
                 }
-                disabled={referral.status === 'REJECTED'}
+                disabled={
+                  referral.status === 'REJECTED' ||
+                  loading
+                }
               >
                 Reject
               </button>
-
             </div>
-
           </div>
-
         ))}
-
       </div>
-
     </div>
   )
 }
 
-export default EmployeeReferrals
+export default EmployeeReferrals;
